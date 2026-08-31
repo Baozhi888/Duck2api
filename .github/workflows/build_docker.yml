@@ -2,10 +2,8 @@ name: Build Docker Image
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - README.md
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -22,13 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read version
-        id: version
+      - name: Set release metadata
+        id: release
         shell: bash
         run: |
-          version="$(tr -d '[:space:]' < VERSION)"
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "tag=v${version}" >> "${GITHUB_OUTPUT}"
           echo "sha_short=${GITHUB_SHA::12}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up QEMU
@@ -53,8 +52,8 @@ jobs:
           push: true
           tags: |
             ${{ env.GHCR_REPO }}:latest
-            ${{ env.GHCR_REPO }}:${{ steps.version.outputs.version }}
-            ${{ env.GHCR_REPO }}:${{ steps.version.outputs.tag }}
-            ${{ env.GHCR_REPO }}:${{ steps.version.outputs.sha_short }}
+            ${{ env.GHCR_REPO }}:${{ steps.release.outputs.version }}
+            ${{ env.GHCR_REPO }}:${{ steps.release.outputs.tag }}
+            ${{ env.GHCR_REPO }}:${{ steps.release.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
