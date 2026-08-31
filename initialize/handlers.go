@@ -672,41 +672,15 @@ func (h *Handler) doImageEdit(c *gin.Context, prompt string, model string, image
 }
 
 func (h *Handler) engines(c *gin.Context) {
-	type ResData struct {
-		ID      string `json:"id"`
-		Object  string `json:"object"`
-		Created int    `json:"created"`
-		OwnedBy string `json:"owned_by"`
+	models, statusCode, err := fetchDuckDuckGoModels(h.proxy.GetProxyIP())
+	if err != nil {
+		c.JSON(statusCode, gin.H{"error": gin.H{
+			"message": err.Error(),
+			"type":    "upstream_error",
+			"code":    "models_fetch_failed",
+		}})
+		return
 	}
 
-	type JSONData struct {
-		Object string    `json:"object"`
-		Data   []ResData `json:"data"`
-	}
-
-	modelS := JSONData{
-		Object: "list",
-	}
-	var resModelList []ResData
-
-	// Supported models
-	modelIDs := []string{
-		"gpt-5.4-mini",
-		"gpt-5.4-nano",
-		"tinfoil/gpt-oss-120b",
-		"claude-haiku-4-5",
-		"mistral-small",
-	}
-
-	for _, modelID := range modelIDs {
-		resModelList = append(resModelList, ResData{
-			ID:      modelID,
-			Object:  "model",
-			Created: 1685474247,
-			OwnedBy: "duckduckgo",
-		})
-	}
-
-	modelS.Data = resModelList
-	c.JSON(200, modelS)
+	c.JSON(http.StatusOK, models)
 }

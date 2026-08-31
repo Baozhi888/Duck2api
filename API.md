@@ -463,6 +463,8 @@ curl http://localhost:8080/v1/audio/speech \
 
 ### `GET /v1/models`
 
+每次请求都会实时读取 DuckDuckGo 的 `https://duck.ai/duckchat/v1/models`，并转换为 OpenAI 兼容的模型列表，因此无需手动维护模型 ID。
+
 ```bash
 curl http://localhost:8080/v1/models
 ```
@@ -474,14 +476,16 @@ curl http://localhost:8080/v1/models
   "object": "list",
   "data": [
     {
-      "id": "gpt-5.4-nano",
+      "id": "gpt-5.4",
       "object": "model",
-      "created": 1685474247,
-      "owned_by": "duckduckgo"
+      "created": 0,
+      "owned_by": "openai"
     }
   ]
 }
 ```
+
+`created` 为当前服务生成响应时的 Unix 时间戳，`owned_by` 对应 DuckDuckGo 上游响应中的 `provider`。上游请求失败时，接口会返回对应的上游 HTTP 状态码和错误信息。
 
 ---
 
